@@ -1,35 +1,64 @@
 const express = require('express');
 const authMiddleware = require('../middlewares/auth');
+const Project = require('../models/Project');
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
-const projects = [
-  {
-    id: 1,
-    name: 'ReactJS',
-    description: 'A JavaScript library for building user interfaces'
-  },
-  {
-    id: 2,
-    name: 'React Native',
-    description: 'Learn once, write anywhere.'
-  },
-  {
-    id: 3,
-    name: 'NodeJS',
-    description: 'A JavaScript runtime built on Chrome V8 JavaScript engine.'
-  },
-  {
-    id: 4,
-    name: 'MongoDB',
-    description: 'A complete data framework'
-  },
-]
+router.get('/', async (req, res) => {
+  try {
+    const projects = await Project.find().populate('user');
 
-router.get('/', (req, res) => {
-  res.json(projects);
+    return res.status(200).send({ projects });
+  } catch(err) {
+    return res.status(404).send({ error: 'Projects not found' });
+  }
+});
+
+router.get('/:projectId', async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectId).populate('user');
+
+    return res.status(200).send({ project });
+  } catch(err) {
+    return res.status(404).send({ error: 'Project not found' });
+  }
+});
+
+router.get('/userId', async (req, res) => {
+  try {
+    const projects = await Project.find(req.params.userId);
+
+    res.status(200).send({ projects });
+  } catch(err) {
+    res.status(404).send({ error: `Projects for user ${req.params.userId} not found` });
+  }
+})
+
+router.post('/', async (req, res) => {
+  try {
+    const project = await Project.create({ ...req.body, user: req.userId });
+
+    res.status(201).send({ project });
+  } catch(err) {
+    return res.status(400).send({ error: 'Could not create a new project' });
+  }
+
+});
+
+router.put('/:projectId', async (req, res) => {
+  res.send({ user: req.userId });
+});
+
+router.delete('/:projectId', async (req, res) => {
+  try { 
+    await Project.findByIdAndRemove(req.params.projectId);
+
+    return res.send();
+  } catch(err){
+    res.status(400).send({ error: `Could not delete project with ID ${req.params.projectId} ` })
+  }
 });
 
 module.exports = app => app.use('/projects', router);

@@ -1,11 +1,11 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(cors());
 
 require('./app/controllers/index')(app);
 
-app.listen(3000, () => console.log('Servidor rodando na porta 3000'));
+app.listen(4000, () => console.log('Servidor rodando na porta 4000'));
